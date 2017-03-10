@@ -36,9 +36,7 @@ cout<<"Initialized MyPlayer" << endl;
 // Subscribe to the make_a_play_message
 sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, this);
 
-
-
-        t1.setOrigin( tf::Vector3(1, 1, 0.0) );
+        t1.setOrigin( tf::Vector3(randNumber(),randNumber(), 0.0) );
         Quaternion q;
         q.setRPY(0, 0, 0);
         t1.setRotation(q);
@@ -48,7 +46,14 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
 
 };
 
+      double randNumber(){
+        struct timeval t1;
+        gettimeofday(&t1,NULL);
+        srand(t1.tv_usec);
+        double x =((((double)rand()/(double)RAND_MAX)*2 -1)*5);
 
+        return x;
+      }
 
 
  void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
@@ -59,7 +64,13 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
         //Definicao dos angulos de rotação e valores de translação 
         //DEVERIA SER CALCULADO PELA AI DO SISTEMA
         float turn_angle = M_PI/10;
-        float displacement = 0.5;
+        float displacement = msg->max_displacement;
+
+
+double max_t=(M_PI/30);
+if(turn_angle > max_t) turn_angle=max_t;
+else if (turn_angle < -max_t) turn_angle = -max_t;
+
 
         //Compute the new reference frame
         tf::Transform t_mov;
