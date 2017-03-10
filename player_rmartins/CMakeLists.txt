@@ -7,7 +7,15 @@ project(player_rmartins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
+  rwsua2017_libs
+  rwsua2017_msgs
+  message_runtime
+  message_generation
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -101,7 +109,7 @@ find_package(catkin REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES player_rmartins
-#  CATKIN_DEPENDS other_catkin_pkg
+ CATKIN_DEPENDS roscpp rospy std_msgs message_runtime rwsua2017_msgs
 #  DEPENDS system_lib
 )
 
@@ -112,6 +120,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -127,7 +138,8 @@ catkin_package(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(player_rmartins_node src/player_rmartins_node.cpp)
- 
+## Specify libraries to link a library or executable target against
+ target_link_libraries(player_rmartins_node ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
