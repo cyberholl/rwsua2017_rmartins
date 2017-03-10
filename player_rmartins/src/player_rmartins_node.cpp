@@ -5,7 +5,7 @@
 //ROS includes
 #include <ros/ros.h>
 
-//
+// my lybraries includes
 #include <rwsua2017_libs/player.h>
 #include <rwsua2017_msgs/MakeAPlay.h>
 
@@ -16,17 +16,23 @@ namespace rwsua2017
 class MyPlayer: public Player
 {
 public:
-// Variaveis têm que ser declaradas antes das funcões
+
   ros::NodeHandle n;
   ros::Subscriber sub;
 
 MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
 
 {  
+cout<<"Initialized MyPlayer" << endl;
+
+
+// Subscribe to the make_a_play_message
 sub = n.subscribe("/make_a_play", 1000, &MyPlayer::makeAPlayCallback, this);
 
-cout<<"Initialized MyPlayer" << endl;
+
 };
+
+
 
 
 void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
@@ -54,7 +60,7 @@ int main(int argc, char **argv)
    
     //rwsua2017::Player player("rmartins","blue"); 
     //layer.set_team_name();
-    rwsua2017::MyPlayer myplayer("rmartins","red");
+    rwsua2017::MyPlayer myplayer("rmartins","green");
    
 
         cout << "name =  " << myplayer.name << endl;
