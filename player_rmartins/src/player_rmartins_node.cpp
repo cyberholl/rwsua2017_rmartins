@@ -26,6 +26,8 @@ public:
       Subscriber sub;
       TransformBroadcaster br;
       Transform t1;
+      NodeHandle node;
+      TransformListener listener;
 
 MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
 
@@ -56,6 +58,26 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
       }
 
 
+float getAngleTo(string player_name){
+tf::StampedTransform trans;
+
+	try{
+	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	}
+
+	catch (TransformException &ex) {
+         ROS_ERROR("%s",ex.what());
+         Duration(1.0).sleep();
+        }
+
+	float x=trans.getOrigin().x();
+        float y=trans.getOrigin().y();
+
+        cout << "x= " << x << "y =" << y << endl;
+	return atan2(y,x);
+
+}
+
  void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
         cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
@@ -63,13 +85,15 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
 
         //Definicao dos angulos de rotação e valores de translação 
         //DEVERIA SER CALCULADO PELA AI DO SISTEMA
-        float turn_angle = M_PI/10;
+
+       // float turn_angle = getAngleTo(preys_team->at(0));
+	float turn_angle = getAngleTo("vsilva");
         float displacement = msg->max_displacement;
 
 
-double max_t=(M_PI/30);
-if(turn_angle > max_t) turn_angle=max_t;
-else if (turn_angle < -max_t) turn_angle = -max_t;
+	double max_t=(M_PI/30);
+	if(turn_angle > max_t) turn_angle=max_t;
+	else if (turn_angle < -max_t) turn_angle = -max_t;
 
 
         //Compute the new reference frame
