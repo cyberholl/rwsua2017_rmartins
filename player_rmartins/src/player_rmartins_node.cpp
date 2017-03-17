@@ -119,14 +119,20 @@ public:
 
         if(distanceTovsilva < distanceTojsousa && distanceTovsilva < distanceTodcorreira)
             angle_inimigo = angleTovsilva;
-
         if(distanceTojsousa < distanceTovsilva && distanceTojsousa < distanceTodcorreira)
             angle_inimigo = angleTojsousa;
 
         if(distanceTodcorreira < distanceTojsousa && distanceTodcorreira < distanceTovsilva)
             angle_inimigo = angleTodcorreia;
 
-        if(distanceTobvieira <= 2)
+        if(distanceToMap >= 5.5)
+        move(displacement,angleToMap,msg->max_displacement,M_PI/30);
+	else
+         move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+
+
+
+	 if(distanceTobvieira <= 2)
         	{
 	if(distanceTovsilva<distanceTobvieira)
 	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
@@ -173,7 +179,6 @@ public:
 	    else
             move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
 }
-
 
 
 
