@@ -200,11 +200,11 @@ displacement=max_displacement;
 	// Equipa 5LB
  	//float dist_moliveira = getDistanceTo("moliveira");
         //float dist_brocha = getDistanceTo("brocha");
-      //  float dist_bvieira = getDistanceTo("bvieira");
+        //  float dist_bvieira = getDistanceTo("bvieira");
 	// Mapa (onde estou)
 	//float dist_origemx = whereAmIX("map");
-      //  float dist_origemy = whereAmIY("map");
-
+        //  float dist_origemy = whereAmIY("map");
+  
 
 
 	// Se for sair do mapa, vira. 
@@ -212,7 +212,7 @@ displacement=max_displacement;
 
 
 
-	turn_angle=getAngleTo("jferreira");
+	turn_angle=getAngleTo("vsilva");
 
 
 
