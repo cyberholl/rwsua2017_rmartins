@@ -15,206 +15,168 @@
 #include <rwsua2017_libs/player.h>
 #include <rwsua2017_msgs/MakeAPlay.h>
 
+double generateRandomCoordinate(){
+    struct timeval t1;
+    gettimeofday(&t1,NULL);
+    srand(t1.tv_usec);
+    double x =((((double)rand()/(double)RAND_MAX)*2 -1)*5);
+
+    return x;
+}
 
 using namespace std;
-using namespace ros;
-using namespace tf;
 using namespace boost;
+using namespace tf;
+using namespace ros;
 
 namespace rwsua2017
 {
-class MyPlayer: public Player
+
+class MyPlayer: public Player //herda se a myplayer da classe player
 {
 public:
-
-      Subscriber sub;
-      TransformBroadcaster br;
-      ros::Publisher vis_pub;
-      NodeHandle node;
-      TransformListener listener;
-
-
-
-MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
-
-{  
+    //Properties
+    Subscriber sub;
+    //variavel de publicacao : broadcaster
+    TransformBroadcaster br;
+    tf::TransformListener listener;
+    ros::Publisher vis_pub;
 
 
+    MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
+    {
 
+        Transform t1; //cria se uma matriz de transformacao t1
 
+        sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback,this);
 
+        vis_pub = n.advertise<visualization_msgs::Marker>( "/bocas", 0 );
 
-cout<<"Initialized MyPlayer" << endl;
-      Transform t1;
+        //Poe o nosso jogador na posicao inicial
+        // set translacao
 
-// Subscribe to the make_a_play_message
-sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, this);
-vis_pub = n.advertise<visualization_msgs::Marker>( "/bocas", 0 );
-
-
-
-        t1.setOrigin( tf::Vector3(randNumber(),randNumber(), 0.0) );
-        Quaternion q;
-        q.setRPY(0, 0, 0);
+        t1.setOrigin(tf::Vector3(generateRandomCoordinate(), generateRandomCoordinate(), 0.0) ); //define se a origem (componente translacao) -> (1,1,0)
+        Quaternion q; //serve para representar a rotacao
+        //set rotacao
+        q.setRPY(0, 0, 0); //seta o quaternion
         t1.setRotation(q);
-        br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name));
-        cout << "Initialized MyPlayer" << endl;
+        br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name)); //transformacao de onde para onde? mapa para o nome do jogador
 
-};
-      double randNumber(){
-        struct timeval t1;
-        gettimeofday(&t1,NULL);
-        srand(t1.tv_usec);
-        double x =((((double)rand()/(double)RAND_MAX)*2 -1)*5);
+        cout << "Initalized MyPlayer" <<endl;
+    };
 
-        return x;
-      }
+    tf::StampedTransform getPose(float time_to_wait = 0.1)    {
+        tf::StampedTransform trans;
+        ros::Time now = Time(0);
+        try
+        {
+            listener.waitForTransform("map", name, now, Duration(time_to_wait));
+            listener.lookupTransform("map",name,now, trans);
+        }
+        catch (tf::TransformException ex)
+        {
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(0.01).sleep();
+        }
+        float x = trans.getOrigin().x();
+        return trans;
+    }
 
-        tf::StampedTransform getpose(float time_to_wait=0.1){
-	tf::StampedTransform trans;
-	ros::Time now=Time(0); 
-try{
-listener.waitForTransform("map",name,now,Duration(time_to_wait));
-	listener.lookupTransform("map", name,now, trans); // variavel trans
+    void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
+    {
+        cout << "received a make a play msg with max displacement = " << msg->max_displacement <<endl;
+
+        //definicao angulos de rotacao e valores de translacao
+        //devia ser calculado pela ai do sys
+       // float turn_angle = getAngleToPlayer("vsilva");
+        float displacement = 0.5;
+        //move my player
+
+        //Distancia e angulos dos que me caçam
+        float distanceTomoliveira = getDistanceTo("moliveira");
+        float distanceTobrocha = getDistanceTo("brocha");
+        float distanceTobvieira = getDistanceTo("bvieira");
+
+        float angleTomoliveira = getAngleToPlayer("moliveira");
+        float angleTobrocha = getAngleToPlayer("brocha");
+        float angleTobvieira = getAngleToPlayer("bvieira");
+
+        //Distancia e angulo para o mapa
+        float distanceToMap = getDistanceTo("map");
+        float angleToMap = getAngleToPlayer("map");
+
+        // Distancia e angulo dos que eu caço
+        float distanceTovsilva = getDistanceTo("vsilva");
+        float distanceTojsousa = getDistanceTo("jsousa");
+        float distanceTodcorreira = getDistanceTo("dcorreia");
+        float angleTovsilva = getAngleToPlayer("vsilva");
+        float angleTojsousa = getAngleToPlayer("jsousa");
+        float angleTodcorreia = getAngleToPlayer("dcorreia");
+
+        float angle_inimigo;
+
+        if(distanceTovsilva < distanceTojsousa && distanceTovsilva < distanceTodcorreira)
+            angle_inimigo = angleTovsilva;
+
+        if(distanceTojsousa < distanceTovsilva && distanceTojsousa < distanceTodcorreira)
+            angle_inimigo = angleTojsousa;
+
+        if(distanceTodcorreira < distanceTojsousa && distanceTodcorreira < distanceTovsilva)
+            angle_inimigo = angleTodcorreia;
+
+        if(distanceTobvieira <= 2)
+        	{
+	if(distanceTovsilva<distanceTobvieira)
+	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+	else if(distanceTodcorreira<distanceTobvieira)
+	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+	else if(distanceTojsousa<distanceTobvieira)
+	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+	else if(distanceToMap >= 5.5)
+	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+	else
+            move(displacement,-angleTobvieira,msg->max_displacement,M_PI/30);
+	}
+        else if(distanceTobrocha <= 2)
+	{
+	if(distanceTovsilva<distanceTobrocha)
+	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+	else if(distanceTodcorreira<distanceTobrocha)
+	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+	else if(distanceTojsousa<distanceTobrocha)
+	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+	else if(distanceToMap >= 5.5)
+	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+	else
+            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
+	}
+        else if(distanceTomoliveira <= 2)
+	{
+	if(distanceTovsilva<distanceTomoliveira)
+	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+	else if(distanceTodcorreira<distanceTomoliveira)
+	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+	else if(distanceTojsousa<distanceTomoliveira)
+	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+	else if(distanceToMap >= 5.5)
+	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+	else
+            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
 	}
 
-	catch (TransformException &ex) {
-         ROS_ERROR("%s",ex.what());
-         Duration(1.0).sleep();
-        }
-
-	return trans;
-        
-
-};
-
-
-float getAngleTo(string player_name,float time_to_wait=0.1){
-	tf::StampedTransform trans;
-	ros::Time now=Time(0); 
-
-	try{
-	listener.waitForTransform(name,player_name,now,Duration(time_to_wait));
-	listener.lookupTransform(name, player_name,now, trans); // variavel trans
-	}
-
-	catch (TransformException &ex) {
-         ROS_ERROR("%s",ex.what());
-         Duration(1.0).sleep();
-        }
-
-	float x=trans.getOrigin().x();
-        float y=trans.getOrigin().y();
-
-        cout << "x= " << x << "y =" << y << endl;
-	return atan2(y,x);
-
-}
-
-float getDistanceTo(string player_name,float time_to_wait=0.1){
-tf::StampedTransform trans;
-ros::Time now=Time(0);
-
-	try{
-	listener.waitForTransform(name,player_name,now,Duration(time_to_wait));
-	listener.lookupTransform(name, player_name,now, trans); // variavel trans
-	}
-
-	catch (TransformException &ex) {
-         ROS_ERROR("%s",ex.what());
-         Duration(1.0).sleep();
-        }
-
-	float x=trans.getOrigin().x();
-        float y=trans.getOrigin().y();
-	return sqrt(y*y+x*x);
-}
-
-
-void move(float displacement,float turn_angle,float max_displacement,float max_turn_angle){
-
-//Saturate turn angle
-        double max_t=max_turn_angle;
-	if(turn_angle > max_t) turn_angle=max_t;
-	else if (turn_angle < -max_t) turn_angle = -max_t;
-
-
-
-// Saturation displacement
-if(displacement>max_displacement)
+        else
 {
-displacement=max_displacement;
+            
+            if(distanceToMap >= 5.5)
+            move(displacement,angleToMap,msg->max_displacement,M_PI/30);
+	    else
+            move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
 }
 
 
-        //Compute the new reference frame
-        tf::Transform t_mov;
-        Quaternion q;
-        q.setRPY(0, 0, turn_angle);
-        t_mov.setRotation(q);
-        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
-
-        tf::Transform t = getpose()  * t_mov;
-        //Send the new transform to ROS
-        br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
-
-}
 
 
-// IA para o jogo
- void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
-      {
-        cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
-	// Máximos
-	float displacement = msg->max_displacement;
-	
-	// Move my player
-//	
-
-	double max_t=(M_PI/30);
-        // Definicao dos angulos de rotação e valores de translação 
-	// Localizar os outros jogadores
-	float dist_dcorreia = getDistanceTo("dcorreia");
-        float dist_vsilva = getDistanceTo("vsilva");
-        float dist_jsousa= getDistanceTo("jsousa");
-
-	float turn_angle_dcorreia=getAngleTo("dcorreia");
-        float turn_angle_vsilva=getAngleTo("vsilva");
-        float turn_angle_jsousa=getAngleTo("jsousa");
-
-	// Equipa 5LB
- 	float dist_moliveira = getDistanceTo("moliveira");
-        float dist_brocha = getDistanceTo("brocha");
-        float dist_bvieira = getDistanceTo("bvieira");
-	
-	float turn_angle_moliveira=getAngleTo("moliveira");
-        float turn_angle_brocha=getAngleTo("brocha");
-        float turn_angle_bvieira=getAngleTo("bvieira");
-	
-
-	float dist_campo = getDistanceTo("map");
-        float turn_campo=getAngleTo("map");
-
-	if( dist_campo>5.5)
-	move(displacement,turn_campo*1.1,msg->max_displacement,M_PI/30);
-	else if(dist_moliveira<=2)
-        move(displacement,-turn_angle_moliveira,msg->max_displacement,M_PI/30);
-        else if(dist_brocha<=2)
-        move(displacement,-turn_angle_brocha,msg->max_displacement,M_PI/30);
- 	else if(dist_brocha<=2)
-        move(displacement,-turn_angle_bvieira,msg->max_displacement,M_PI/30);
-	else {
-	if(dist_dcorreia<dist_vsilva && dist_jsousa>dist_dcorreia)
-	move(displacement,turn_angle_dcorreia,msg->max_displacement,M_PI/30);
-	if(dist_dcorreia>dist_vsilva && dist_jsousa>dist_vsilva)
-	move(displacement,turn_angle_vsilva,msg->max_displacement,M_PI/30);
-	if(dist_dcorreia>dist_jsousa && dist_jsousa<dist_vsilva)
-	move(displacement,turn_angle_jsousa,msg->max_displacement,M_PI/30);
-	}
-
-
-
-        //
+        // enviar boca
         visualization_msgs::Marker marker;
         marker.header.frame_id = name; //sistema de referencias
         marker.header.stamp = ros::Time();
@@ -236,55 +198,107 @@ displacement=max_displacement;
         marker.color.b = 0.3;
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
-        marker.text = "sup?!";
+        marker.text = "sup?";
         vis_pub.publish( marker ); //publicar o marcador
 
 
-  	
+    }
+
+    float getAngleToPlayer(string player_name,float time_to_wait = 0.1)
+    {
+        ros::Time now = Time(0);
+
+        tf::StampedTransform trans;
+        try
+        {
+            listener.waitForTransform(name, player_name, now, Duration(time_to_wait));
+            listener.lookupTransform(name, player_name,now, trans);
+        }
+        catch (tf::TransformException ex)
+        {
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(0.01).sleep();
+        }
+
+        float x = trans.getOrigin().x();
+        float y = trans.getOrigin().y();
+        cout << "delta x: " << x << endl;
+        cout << "delta y: " << y << endl;
+
+        return atan2(y,x);
+    }
+
+    float getDistanceTo(string player_name,float time_to_wait = 0.1)
+    {
+        ros::Time now = Time(0);
+
+        tf::StampedTransform trans;
+        try
+        {
+            listener.waitForTransform(name, player_name, now, Duration(time_to_wait));
+            listener.lookupTransform(name, player_name,now, trans);
+        }
+        catch (tf::TransformException ex)
+        {
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(0.01).sleep();
+        }
+
+        float x = trans.getOrigin().x();
+        float y = trans.getOrigin().y();
+
+        float distance = sqrt(x*x+y*y);
+        return distance;
+
+    }
+
+    void move(float displacement,float turn_angle,float max_displacement,float max_turn_angle)
+    {
+        //saturo o angulo para estar dentro das regras do jogo
+        //Assegura que nao se roda mais do que o maximo
+        double max_t =  max_turn_angle;
+        if (turn_angle > max_t) turn_angle = max_t;
+        else if (turn_angle < -max_t) turn_angle = -max_t;
 
 
+        // Saturacao displacement
+        //Assegura que nao se danda mais do que o maximo
 
+        if(displacement > max_displacement)
+        {
+            displacement = max_displacement;
+        }
 
-      }
+        //Compute the new reference frame
+        tf::Transform t_mov;
+        Quaternion q;
+        q.setRPY(0, 0, turn_angle);
+        t_mov.setRotation(q);
+        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
+        //t1 memoria local que o codigo tem de onde o jogador estava
+        //necessario actualizar t1 consoante o ROS
+        //  t1 = getPose();
+        tf::Transform t = getPose()  * t_mov;
+        //Send the new transform to ROS
+        br.sendTransform(StampedTransform(t, ros::Time::now(), "map", name));
+    }
 
-vector<string> teammates;
-
+    //Lista de strings com o nome dos outros jogadores da minha equipa
+    vector<string> teammates;
 };
 }
 
-
-
-
-
-
-
-
-
 int main(int argc, char **argv)
 {
- ros::init(argc, argv, "player_rmartins");
 
+    ros::init(argc, argv, "player_rmartins_node");
+    string player_name = "rmartins";
 
-    cout << "Hello world" << endl;   
-   
-    //rwsua2017::Player player("rmartins","blue"); 
-    //layer.set_team_name();
-    rwsua2017::MyPlayer myplayer("rmartins","green");
-   
+    rwsua2017::MyPlayer myplayer(player_name,"green");
 
-        cout << "name =  " << myplayer.name << endl;
-	cout << "team =  " << myplayer.get_team_name()<< endl;
-	myplayer.teammates.push_back("fsilva");
-	myplayer.teammates.push_back("vsilva");
+    ros::spin();
 
-cout << "Team"<<endl;
-//for(unsigned long int i=0; i<myplayer.teammates.size(); ++i)
-for(size_t i=0; i<myplayer.teammates.size(); ++i)
-{
-cout << myplayer.teammates[i]<<endl;
+    return 1;
 }
-ros::spin();// fica em constante funcionamento
 
-    //cout << "Team Name =  " << player.team_name << endl;
-    return 1;                                                      
-}
+
