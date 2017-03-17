@@ -91,7 +91,7 @@ public:
         //definicao angulos de rotacao e valores de translacao
         //devia ser calculado pela ai do sys
        // float turn_angle = getAngleToPlayer("vsilva");
-        float displacement = 0.5;
+        float displacement = msg->max_displacement;
         //move my player
 
         //Distancia e angulos dos que me caçam
@@ -204,7 +204,7 @@ public:
         marker.color.b = 0.3;
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
-        marker.text = "baby dont hurt me";
+        marker.text = displacement;
         vis_pub.publish( marker ); //publicar o marcador
 
 
