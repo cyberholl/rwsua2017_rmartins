@@ -62,7 +62,7 @@ public:
         t1.setRotation(q);
         br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name)); //transformacao de onde para onde? mapa para o nome do jogador
 
-        cout << "Initalized MyPlayer" <<endl;
+        ROS_INFO_STREAM("Initalized MyPlayer");
     };
 
     tf::StampedTransform getPose(float time_to_wait = 0.1)    {
@@ -84,7 +84,7 @@ public:
 
     void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
     {
-        cout << "received a make a play msg with max displacement = " << msg->max_displacement <<endl;
+       ROS_INFO_STREAM("received a make a play msg with max displacement = ");
 
         //definicao angulos de rotacao e valores de translacao
         //devia ser calculado pela ai do sys
@@ -221,8 +221,8 @@ public:
 
         float x = trans.getOrigin().x();
         float y = trans.getOrigin().y();
-        cout << "delta x: " << x << endl;
-        cout << "delta y: " << y << endl;
+        ROS_INFO_STREAM("delta x: ");
+        ROS_INFO_STREAM("delta y: ");
 
         return atan2(y,x);
     }
