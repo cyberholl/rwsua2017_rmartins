@@ -205,6 +205,7 @@ public:
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
         marker.text = displacement;
+;
         vis_pub.publish( marker ); //publicar o marcador
 
 
