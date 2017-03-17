@@ -121,65 +121,16 @@ public:
             angle_inimigo = angleTovsilva;
         if(distanceTojsousa < distanceTovsilva && distanceTojsousa < distanceTodcorreira)
             angle_inimigo = angleTojsousa;
-
         if(distanceTodcorreira < distanceTojsousa && distanceTodcorreira < distanceTovsilva)
             angle_inimigo = angleTodcorreia;
 
+
         if(distanceToMap >= 5.5)
-        move(displacement,angleToMap,msg->max_displacement,M_PI/30);
-	else
-         move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-
-
-
-	 if(distanceTobvieira <= 2)
-        	{
-	if(distanceTovsilva<distanceTobvieira)
-	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
-	else if(distanceTodcorreira<distanceTobvieira)
-	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
-	else if(distanceTojsousa<distanceTobvieira)
-	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
-	else if(distanceToMap >= 5.5)
-	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-	else
-            move(displacement,-angleTobvieira,msg->max_displacement,M_PI/30);
-	}
-        else if(distanceTobrocha <= 2)
-	{
-	if(distanceTovsilva<distanceTobrocha)
-	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
-	else if(distanceTodcorreira<distanceTobrocha)
-	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
-	else if(distanceTojsousa<distanceTobrocha)
-	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
-	else if(distanceToMap >= 5.5)
-	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-	else
-            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
-	}
-        else if(distanceTomoliveira <= 2)
-	{
-	if(distanceTovsilva<distanceTomoliveira)
-	move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
-	else if(distanceTodcorreira<distanceTomoliveira)
-	move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
-	else if(distanceTojsousa<distanceTomoliveira)
-	move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
-	else if(distanceToMap >= 5.5)
-	move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-	else
-            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
-	}
+        {
+            move(displacement,angleToMap+M_PI/3,msg->max_displacement,M_PI/30);
+        }
         else
-{
-            
-            if(distanceToMap >= 5.5)
-            move(displacement,angleToMap,msg->max_displacement,M_PI/30);
-	    else
             move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-}
-
 
 
         // enviar boca
@@ -204,7 +155,7 @@ public:
         marker.color.b = 0.3;
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
-        marker.text = displacement;
+        marker.text = "Baby don't hurt me; no more";
 ;
         vis_pub.publish( marker ); //publicar o marcador
 
