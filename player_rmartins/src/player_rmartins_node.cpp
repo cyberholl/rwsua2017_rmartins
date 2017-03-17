@@ -206,12 +206,9 @@ displacement=max_displacement;
         float dist_origemy = whereAmIY("map");
 
 	// Se for sair do mapa, vira. 
-	if(dist_origemx> 4.5 || dist_origemy> 4.5 || dist_origemy< -4.5 || dist_origemx< -4.5){
-	turn_angle = max_t;
-        }
-        else{
+	
         turn_angle = getAngleTo("dcorreia");
-         }
+        
 
 
          // quando não existe dá 4.58939
