@@ -12,6 +12,8 @@
 #include <rwsua2017_libs/player.h>
 #include <rwsua2017_msgs/MakeAPlay.h>
 
+
+
 using namespace std;
 using namespace ros;
 using namespace tf;
@@ -25,15 +27,17 @@ public:
 
       Subscriber sub;
       TransformBroadcaster br;
-      Transform t1;
+
       NodeHandle node;
       TransformListener listener;
+
+
 
 MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
 
 {  
 cout<<"Initialized MyPlayer" << endl;
-
+      Transform t1;
 
 // Subscribe to the make_a_play_message
 sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, this);
@@ -43,11 +47,9 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
         q.setRPY(0, 0, 0);
         t1.setRotation(q);
         br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name));
-
-      cout << "Initialized MyPlayer" << endl;
+        cout << "Initialized MyPlayer" << endl;
 
 };
-
       double randNumber(){
         struct timeval t1;
         gettimeofday(&t1,NULL);
@@ -56,6 +58,22 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
 
         return x;
       }
+
+tf::StampedTransform getpose(void){
+	tf::StampedTransform trans;
+try{
+	listener.lookupTransform("map", name,Time(0), trans); // variavel trans
+	}
+
+	catch (TransformException &ex) {
+         ROS_ERROR("%s",ex.what());
+         Duration(1.0).sleep();
+        }
+
+	return trans;
+        
+
+};
 
 
 float getAngleTo(string player_name){
@@ -75,23 +93,106 @@ tf::StampedTransform trans;
 
         cout << "x= " << x << "y =" << y << endl;
 	return atan2(y,x);
+        
+
 
 }
 
+float getDistanceTo(string player_name){
+tf::StampedTransform trans;
+
+	try{
+	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	}
+
+	catch (TransformException &ex) {
+         ROS_ERROR("%s",ex.what());
+         Duration(1.0).sleep();
+        }
+
+	float x=trans.getOrigin().x();
+        float y=trans.getOrigin().y();
+	return sqrt(y*y+x*x);
+}
+// Funções para sabe onde é que se está; player name é map
+float whereAmIX(string player_name){
+tf::StampedTransform trans;
+
+	try{
+	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	}
+
+	catch (TransformException &ex) {
+         ROS_ERROR("%s",ex.what());
+         Duration(1.0).sleep();
+        }
+
+	float x=trans.getOrigin().x();
+	return x;
+}
+float whereAmIY(string player_name){
+tf::StampedTransform trans;
+
+	try{
+	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	}
+
+	catch (TransformException &ex) {
+         ROS_ERROR("%s",ex.what());
+         Duration(1.0).sleep();
+        }
+
+	float y=trans.getOrigin().y();
+	return y;
+}
+// IA para o jogo
  void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
         cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
-
-
-        //Definicao dos angulos de rotação e valores de translação 
-        //DEVERIA SER CALCULADO PELA AI DO SISTEMA
-
-       // float turn_angle = getAngleTo(preys_team->at(0));
-	float turn_angle = getAngleTo("vsilva");
-        float displacement = msg->max_displacement;
-
-
+	float turn_angle;
+	// Máximos
+	float displacement = msg->max_displacement;
 	double max_t=(M_PI/30);
+        //Definicao dos angulos de rotação e valores de translação 
+	// Localizar os outros jogadores
+	// Equipa 5LB
+ 	//float dist_moliveira = getDistanceTo("moliveira");
+        //float dist_brocha = getDistanceTo("brocha");
+        float dist_bvieira = getDistanceTo("bvieira");
+	// Mapa (onde estou)
+	float dist_origemx = whereAmIX("map");
+        float dist_origemy = whereAmIY("map");
+
+	// Se for sair do mapa, vira. 
+	if(dist_origemx> 4.5 || dist_origemy> 4.5 || dist_origemy< -4.5 || dist_origemx< -4.5){
+	turn_angle = max_t;
+        }
+        else{
+        turn_angle = getAngleTo("fsilva");
+         }
+
+
+         // quando não existe dá 4.58939
+
+
+	// Caçar
+	if(dist_bvieira <0.5){
+	// Equipa Azul
+	float dist_vsilva = getDistanceTo("vsilva");
+        float dist_dcorreia = getDistanceTo("dcorreia");
+	float dist_jsousa = getDistanceTo("jsousa");
+	}
+
+
+
+
+
+
+  	 // Verificar se está a ser caçado 
+ 	// float distancia_red2=getDistanceTo("brocha"); 
+ 	// float distancia_red3=getDistanceTo("moliveira");
+
+
 	if(turn_angle > max_t) turn_angle=max_t;
 	else if (turn_angle < -max_t) turn_angle = -max_t;
 
@@ -103,17 +204,15 @@ tf::StampedTransform trans;
         t_mov.setRotation(q);
         t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
 
-        tf::Transform t = t1  * t_mov;
+        tf::Transform t = getpose()  * t_mov;
         //Send the new transform to ROS
         br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
-	t1=t;
       }
 
 vector<string> teammates;
 
 };
 }
-
 
 
 int main(int argc, char **argv)
