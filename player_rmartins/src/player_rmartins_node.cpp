@@ -59,10 +59,12 @@ sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, thi
         return x;
       }
 
-tf::StampedTransform getpose(void){
+        tf::StampedTransform getpose(float time_to_wait=0.1){
 	tf::StampedTransform trans;
+	ros::Time now=Time(0); 
 try{
-	listener.lookupTransform("map", name,Time(0), trans); // variavel trans
+listener.waitForTransform("map",name,now,Duration(time_to_wait));
+	listener.lookupTransform("map", name,now, trans); // variavel trans
 	}
 
 	catch (TransformException &ex) {
@@ -76,11 +78,13 @@ try{
 };
 
 
-float getAngleTo(string player_name){
-tf::StampedTransform trans;
+float getAngleTo(string player_name,float time_to_wait=0.1){
+	tf::StampedTransform trans;
+	ros::Time now=Time(0); 
 
 	try{
-	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	listener.waitForTransform(name,player_name,now,Duration(time_to_wait));
+	listener.lookupTransform(name, player_name,now, trans); // variavel trans
 	}
 
 	catch (TransformException &ex) {
@@ -145,6 +149,10 @@ tf::StampedTransform trans;
 	float y=trans.getOrigin().y();
 	return y;
 }
+
+//void move(displacement,turn_angle,msh->max_displacement,M_PI/30);
+
+
 // IA para o jogo
  void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
@@ -152,12 +160,16 @@ tf::StampedTransform trans;
 	float turn_angle;
 	// Máximos
 	float displacement = msg->max_displacement;
+	
+	// Move my player
+//	move(displacement,turn_angle,msh->max_displacement,M_PI/30);
+
 	double max_t=(M_PI/30);
         //Definicao dos angulos de rotação e valores de translação 
 	// Localizar os outros jogadores
 	// Equipa 5LB
- 	//float dist_moliveira = getDistanceTo("moliveira");
-        //float dist_brocha = getDistanceTo("brocha");
+ 	float dist_moliveira = getDistanceTo("moliveira");
+        float dist_brocha = getDistanceTo("brocha");
         float dist_bvieira = getDistanceTo("bvieira");
 	// Mapa (onde estou)
 	float dist_origemx = whereAmIX("map");
@@ -168,22 +180,28 @@ tf::StampedTransform trans;
 	turn_angle = max_t;
         }
         else{
-        turn_angle = getAngleTo("fsilva");
+        turn_angle = getAngleTo("dcorreia");
          }
 
 
          // quando não existe dá 4.58939
 
 
-	// Caçar
-	if(dist_bvieira <0.5){
-	// Equipa Azul
-	float dist_vsilva = getDistanceTo("vsilva");
-        float dist_dcorreia = getDistanceTo("dcorreia");
-	float dist_jsousa = getDistanceTo("jsousa");
+	// Run
+	if(dist_bvieira <0.25){
+        turn_angle = getAngleTo("bvieira");
+        turn_angle=-turn_angle;
 	}
-
-
+	// Run
+	if(dist_brocha <0.25){
+        turn_angle = getAngleTo("brocha");
+        turn_angle=-turn_angle;
+	}
+	// Run
+	if(dist_brocha <0.25){
+        turn_angle = getAngleTo("moliveira");
+        turn_angle=-turn_angle;
+	}
 
 
 
@@ -213,6 +231,13 @@ vector<string> teammates;
 
 };
 }
+
+
+
+
+
+
+
 
 
 int main(int argc, char **argv)
