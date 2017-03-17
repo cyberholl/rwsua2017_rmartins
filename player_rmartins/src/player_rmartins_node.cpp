@@ -199,36 +199,23 @@ displacement=max_displacement;
 	// Localizar os outros jogadores
 	// Equipa 5LB
  	//float dist_moliveira = getDistanceTo("moliveira");
-        float dist_brocha = getDistanceTo("brocha");
-        float dist_bvieira = getDistanceTo("bvieira");
+        //float dist_brocha = getDistanceTo("brocha");
+      //  float dist_bvieira = getDistanceTo("bvieira");
 	// Mapa (onde estou)
-	float dist_origemx = whereAmIX("map");
-        float dist_origemy = whereAmIY("map");
+	//float dist_origemx = whereAmIX("map");
+      //  float dist_origemy = whereAmIY("map");
+
+
 
 	// Se for sair do mapa, vira. 
-	
-        turn_angle = getAngleTo("dcorreia");
-        
+       // turn_angle = getAngleTo("map");
 
 
-         // quando não existe dá 4.58939
+
+	turn_angle=getAngleTo("jferreira");
 
 
-	// Run
-	if(dist_bvieira <0.5){
-        turn_angle = getAngleTo("bvieira");
-        turn_angle=-turn_angle;
-	}
-	// Run
-	if(dist_brocha <0.5){
-        turn_angle = getAngleTo("brocha");
-        turn_angle=-turn_angle;
-	}
-	// Run
-	if(dist_brocha <0.5){
-        turn_angle = getAngleTo("moliveira");
-        turn_angle=-turn_angle;
-	}
+
 
 
      move(displacement,turn_angle,msg->max_displacement,M_PI/30);
