@@ -1,17 +1,19 @@
-//STD Inludes
+//math includes
+#include <math.h>
+
+//ATD includes
 #include <iostream>
 #include <vector>
- 
 
-//ROS includes
+//ROS INCLUDES
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
-// my lybraries includes
+//Local includes
 #include <rwsua2017_libs/player.h>
 #include <rwsua2017_msgs/MakeAPlay.h>
-
 
 
 using namespace std;
@@ -27,7 +29,7 @@ public:
 
       Subscriber sub;
       TransformBroadcaster br;
-
+      ros::Publisher vis_pub;
       NodeHandle node;
       TransformListener listener;
 
@@ -36,11 +38,20 @@ public:
 MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
 
 {  
+
+
+
+
+
+
 cout<<"Initialized MyPlayer" << endl;
       Transform t1;
 
 // Subscribe to the make_a_play_message
 sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback, this);
+vis_pub = n.advertise<visualization_msgs::Marker>( "/bocas", 0 );
+
+
 
         t1.setOrigin( tf::Vector3(randNumber(),randNumber(), 0.0) );
         Quaternion q;
@@ -97,16 +108,16 @@ float getAngleTo(string player_name,float time_to_wait=0.1){
 
         cout << "x= " << x << "y =" << y << endl;
 	return atan2(y,x);
-        
-
 
 }
 
-float getDistanceTo(string player_name){
+float getDistanceTo(string player_name,float time_to_wait=0.1){
 tf::StampedTransform trans;
+ros::Time now=Time(0);
 
 	try{
-	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
+	listener.waitForTransform(name,player_name,now,Duration(time_to_wait));
+	listener.lookupTransform(name, player_name,now, trans); // variavel trans
 	}
 
 	catch (TransformException &ex) {
@@ -118,42 +129,9 @@ tf::StampedTransform trans;
         float y=trans.getOrigin().y();
 	return sqrt(y*y+x*x);
 }
-// Funções para sabe onde é que se está; player name é map
-float whereAmIX(string player_name){
-tf::StampedTransform trans;
 
-	try{
-	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
-	}
-
-	catch (TransformException &ex) {
-         ROS_ERROR("%s",ex.what());
-         Duration(1.0).sleep();
-        }
-
-	float x=trans.getOrigin().x();
-	return x;
-}
-float whereAmIY(string player_name){
-tf::StampedTransform trans;
-
-	try{
-	listener.lookupTransform(name, player_name,Time(0), trans); // variavel trans
-	}
-
-	catch (TransformException &ex) {
-         ROS_ERROR("%s",ex.what());
-         Duration(1.0).sleep();
-        }
-
-	float y=trans.getOrigin().y();
-	return y;
-}
 
 void move(float displacement,float turn_angle,float max_displacement,float max_turn_angle){
-//
-
-
 
 //Saturate turn angle
         double max_t=max_turn_angle;
@@ -187,7 +165,6 @@ displacement=max_displacement;
  void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
         cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
-	float turn_angle;
 	// Máximos
 	float displacement = msg->max_displacement;
 	
@@ -195,34 +172,78 @@ displacement=max_displacement;
 //	
 
 	double max_t=(M_PI/30);
-        //Definicao dos angulos de rotação e valores de translação 
+        // Definicao dos angulos de rotação e valores de translação 
 	// Localizar os outros jogadores
+	float dist_dcorreia = getDistanceTo("dcorreia");
+        float dist_vsilva = getDistanceTo("vsilva");
+        float dist_jsousa= getDistanceTo("jsousa");
+
+	float turn_angle_dcorreia=getAngleTo("dcorreia");
+        float turn_angle_vsilva=getAngleTo("vsilva");
+        float turn_angle_jsousa=getAngleTo("jsousa");
+
 	// Equipa 5LB
- 	//float dist_moliveira = getDistanceTo("moliveira");
-        //float dist_brocha = getDistanceTo("brocha");
-        //  float dist_bvieira = getDistanceTo("bvieira");
-	// Mapa (onde estou)
-	//float dist_origemx = whereAmIX("map");
-        //  float dist_origemy = whereAmIY("map");
-  
+ 	float dist_moliveira = getDistanceTo("moliveira");
+        float dist_brocha = getDistanceTo("brocha");
+        float dist_bvieira = getDistanceTo("bvieira");
+	
+	float turn_angle_moliveira=getAngleTo("moliveira");
+        float turn_angle_brocha=getAngleTo("brocha");
+        float turn_angle_bvieira=getAngleTo("bvieira");
+	
+
+	float dist_campo = getDistanceTo("map");
+        float turn_campo=getAngleTo("map");
+
+	if( dist_campo>5.5)
+	move(displacement,turn_campo*1.1,msg->max_displacement,M_PI/30);
+	else if(dist_moliveira<=2)
+        move(displacement,-turn_angle_moliveira,msg->max_displacement,M_PI/30);
+        else if(dist_brocha<=2)
+        move(displacement,-turn_angle_brocha,msg->max_displacement,M_PI/30);
+ 	else if(dist_brocha<=2)
+        move(displacement,-turn_angle_bvieira,msg->max_displacement,M_PI/30);
+	else {
+	if(dist_dcorreia<dist_vsilva && dist_jsousa>dist_dcorreia)
+	move(displacement,turn_angle_dcorreia,msg->max_displacement,M_PI/30);
+	if(dist_dcorreia>dist_vsilva && dist_jsousa>dist_vsilva)
+	move(displacement,turn_angle_vsilva,msg->max_displacement,M_PI/30);
+	if(dist_dcorreia>dist_jsousa && dist_jsousa<dist_vsilva)
+	move(displacement,turn_angle_jsousa,msg->max_displacement,M_PI/30);
+	}
 
 
-	// Se for sair do mapa, vira. 
-       // turn_angle = getAngleTo("map");
+
+// Enviar boca
+visualization_msgs::Marker marker;
+marker.header.frame_id = name;
+marker.header.stamp = ros::Time();
+marker.ns = name;
+marker.id = 0;
+marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+marker.action = visualization_msgs::Marker::ADD;
+marker.pose.position.x = 0;
+marker.pose.position.y = 0.1;
+marker.pose.position.z = 0;
+marker.pose.orientation.x = 0.0;
+marker.pose.orientation.y = 0.0;
+marker.pose.orientation.z = 0.0;
+//
+marker.pose.orientation.w = 1.0;
+marker.scale.x = 2;
+marker.scale.y = 2;
+marker.scale.z = 2;
+marker.color.a = 1.0; // Don't forget to set the alpha!
+marker.color.r = 0.3;
+marker.color.g = 0.3;
+marker.color.b = 0.3;
+//only if using a MESH_RESOURCE marker type:
+marker.mesh_resource = "baby don't hurt me";
+vis_pub.publish( marker );
 
 
 
-	turn_angle=getAngleTo("vsilva");
-
-
-
-
-
-     move(displacement,turn_angle,msg->max_displacement,M_PI/30);
-
-  	 // Verificar se está a ser caçado 
- 	// float distancia_red2=getDistanceTo("brocha"); 
- 	// float distancia_red3=getDistanceTo("moliveira");
+  	
 
 
 
