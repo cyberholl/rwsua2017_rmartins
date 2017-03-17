@@ -215,17 +215,17 @@ displacement=max_displacement;
 
 
 	// Run
-	if(dist_bvieira <0.25){
+	if(dist_bvieira <0.5){
         turn_angle = getAngleTo("bvieira");
         turn_angle=-turn_angle;
 	}
 	// Run
-	if(dist_brocha <0.25){
+	if(dist_brocha <0.5){
         turn_angle = getAngleTo("brocha");
         turn_angle=-turn_angle;
 	}
 	// Run
-	if(dist_brocha <0.25){
+	if(dist_brocha <0.5){
         turn_angle = getAngleTo("moliveira");
         turn_angle=-turn_angle;
 	}
