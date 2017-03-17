@@ -150,7 +150,37 @@ tf::StampedTransform trans;
 	return y;
 }
 
-//void move(displacement,turn_angle,msh->max_displacement,M_PI/30);
+void move(float displacement,float turn_angle,float max_displacement,float max_turn_angle){
+//
+
+
+
+//Saturate turn angle
+        double max_t=max_turn_angle;
+	if(turn_angle > max_t) turn_angle=max_t;
+	else if (turn_angle < -max_t) turn_angle = -max_t;
+
+
+
+// Saturation displacement
+if(displacement>max_displacement)
+{
+displacement=max_displacement;
+}
+
+
+        //Compute the new reference frame
+        tf::Transform t_mov;
+        Quaternion q;
+        q.setRPY(0, 0, turn_angle);
+        t_mov.setRotation(q);
+        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
+
+        tf::Transform t = getpose()  * t_mov;
+        //Send the new transform to ROS
+        br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
+
+}
 
 
 // IA para o jogo
@@ -162,13 +192,13 @@ tf::StampedTransform trans;
 	float displacement = msg->max_displacement;
 	
 	// Move my player
-//	move(displacement,turn_angle,msh->max_displacement,M_PI/30);
+//	
 
 	double max_t=(M_PI/30);
         //Definicao dos angulos de rotação e valores de translação 
 	// Localizar os outros jogadores
 	// Equipa 5LB
- 	float dist_moliveira = getDistanceTo("moliveira");
+ 	//float dist_moliveira = getDistanceTo("moliveira");
         float dist_brocha = getDistanceTo("brocha");
         float dist_bvieira = getDistanceTo("bvieira");
 	// Mapa (onde estou)
@@ -204,27 +234,15 @@ tf::StampedTransform trans;
 	}
 
 
-
+     move(displacement,turn_angle,msg->max_displacement,M_PI/30);
 
   	 // Verificar se está a ser caçado 
  	// float distancia_red2=getDistanceTo("brocha"); 
  	// float distancia_red3=getDistanceTo("moliveira");
 
 
-	if(turn_angle > max_t) turn_angle=max_t;
-	else if (turn_angle < -max_t) turn_angle = -max_t;
 
 
-        //Compute the new reference frame
-        tf::Transform t_mov;
-        Quaternion q;
-        q.setRPY(0, 0, turn_angle);
-        t_mov.setRotation(q);
-        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
-
-        tf::Transform t = getpose()  * t_mov;
-        //Send the new transform to ROS
-        br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
       }
 
 vector<string> teammates;
