@@ -214,33 +214,30 @@ displacement=max_displacement;
 
 
 
-// Enviar boca
-visualization_msgs::Marker marker;
-marker.header.frame_id = name;
-marker.header.stamp = ros::Time();
-marker.ns = name;
-marker.id = 0;
-marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-marker.action = visualization_msgs::Marker::ADD;
-marker.pose.position.x = 0;
-marker.pose.position.y = 0.1;
-marker.pose.position.z = 0;
-marker.pose.orientation.x = 0.0;
-marker.pose.orientation.y = 0.0;
-marker.pose.orientation.z = 0.0;
-//
-marker.pose.orientation.w = 1.0;
-marker.scale.x = 2;
-marker.scale.y = 2;
-marker.scale.z = 2;
-marker.color.a = 1.0; // Don't forget to set the alpha!
-marker.color.r = 0.3;
-marker.color.g = 0.3;
-marker.color.b = 0.3;
-//only if using a MESH_RESOURCE marker type:
-marker.mesh_resource = "baby don't hurt me";
-vis_pub.publish( marker );
-
+        //
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = name; //sistema de referencias
+        marker.header.stamp = ros::Time();
+        marker.ns = name;
+        marker.id = 0;
+        marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.pose.position.x = 0;
+        marker.pose.position.y = 0.1;
+        marker.pose.position.z = 0;
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.y = 0.6;
+        marker.pose.orientation.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.scale.z = 0.4; //when is text, only scale z is used
+        marker.color.a = 1.0; // Don't forget to set the alpha!
+        marker.color.r = 0.3;
+        marker.color.g = 0.3;
+        marker.color.b = 0.3;
+        marker.frame_locked = 1;
+        marker.lifetime = ros::Duration(1);
+        marker.text = "sup?!";
+        vis_pub.publish( marker ); //publicar o marcador
 
 
   	
