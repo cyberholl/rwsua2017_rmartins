@@ -163,7 +163,6 @@ public:
 	else
             move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
 	}
-
         else
 {
             
@@ -198,7 +197,7 @@ public:
         marker.color.b = 0.3;
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
-        marker.text = "sup?";
+        marker.text = "baby don't hurt me";
         vis_pub.publish( marker ); //publicar o marcador
 
 
